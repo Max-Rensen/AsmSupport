@@ -1,0 +1,60 @@
+{
+	"name": "asmsupport",
+	"displayName": "AsmSupport",
+	"description": "Support for formatting and syntax highlighting (most) assembly code",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.38.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:assembly"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"languages": [
+			{
+				"id": "assembly",
+				"aliases": [
+					"Assembly",
+					"assembly"
+				],
+				"extensions": [
+					".asm",
+					".s"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "assembly",
+				"scopeName": "source.asm",
+				"path": "./syntaxes/assembly.tmLanguage.json"
+			}
+		],
+		"configuration": {
+			"title": "AsmSupport",
+			"properties": {
+				"asmsupport.commentSpacing": {
+					"type": "integer",
+					"default": 1,
+					"minimum": 0,
+					"description": "The spacing between the longest line (with a comment) and the comment"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.28",
+		"eslint": "^5.13.0",
+		"@types/node": "^10.12.21",
+		"@types/mocha": "^2.2.42"
+	}
+}
