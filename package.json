@@ -24,7 +24,8 @@
 				"extensions": [
 					".asm",
 					".s"
-				]
+				],
+				"configuration": "./language-configuration.json"
 			}
 		],
 		"grammars": [

@@ -7,7 +7,6 @@ vscode.languages.registerDocumentFormattingEditProvider("assembly", {
 
 		let edits = [];
 		let lines = [];
-		let longestComment = 0;
 		let longestInstruction = 0;
 		for (let i = 0; i < document.lineCount; i++) {
 			const line = document.lineAt(i);
@@ -22,12 +21,7 @@ vscode.languages.registerDocumentFormattingEditProvider("assembly", {
 				const comment = line.text.substring(index + 1, line.text.length).trim();
 				const text = line.text.substring(0, index).trim();
 
-				if (text.length > longestComment) {
-					longestComment = text.length;
-				}
-
 				lineObject["comment"] = comment;
-				lineObject["commentLength"] = text.length;
 				lineObject["text"] = text;
 			} else {
 				lineObject["text"] = line.text.trim();
@@ -35,11 +29,13 @@ vscode.languages.registerDocumentFormattingEditProvider("assembly", {
 
 			if (!label) {
 				const instruction = lineObject["text"].split(" ")[0];
-				if (instruction.length > longestInstruction) {
+				lineObject["text"] = lineObject["text"].substring(instruction.length).trim();
+
+				if (instruction.length > longestInstruction && lineObject["text"].length > 0) {
 					longestInstruction = instruction.length;
 				}
+
 				lineObject["instruction"] = instruction;
-				lineObject["text"] = lineObject["text"].substring(instruction.length).trim();
 			}
 
 			if (line.text.trim().startsWith("#")) {
@@ -49,15 +45,35 @@ vscode.languages.registerDocumentFormattingEditProvider("assembly", {
 			}
 		}
 
+		let longestComment = 0;
 		for (let line of lines) {
+			if (!line["comment"]) {
+				continue;
+			}
+
+			const length = (line["label"] ? 0 : tab.length) + line["text"].length + 1;
+			if (length > longestComment) {
+				longestComment = length;
+			}
+		}
+
+		for (let line of lines) {
+			const instruction = line["instruction"] || "";
+			const empty = line["text"].length == 0;
+
+			if (empty && instruction.length == 0) {
+				edits.push(vscode.TextEdit.replace(line["range"], ""));
+			}
+
 			const text =
 				line["label"] ?
 					line["text"] :
-					tab + line["instruction"] + " ".repeat(longestInstruction - line["instruction"].length + 1) + line["text"];
+					empty ? tab + instruction :
+						tab + instruction + " ".repeat(longestInstruction - instruction.length + 1) + line["text"];
 
 			const extra =
 				line["comment"] ?
-					" ".repeat(longestComment - line["commentLength"] + (line["label"] ? tab.length : 0) + commentSpacing) + "# " + line["comment"] :
+					" ".repeat(longestComment - text.length + longestInstruction + commentSpacing) + "# " + line["comment"] :
 					"";
 
 			edits.push(vscode.TextEdit.replace(line["range"], text + extra));
